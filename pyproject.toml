@@ -1,0 +1,35 @@
+[project]
+name = "sphinx-kconfig"
+description = "Zephyr's kconfig Sphinx extension as an independent package"
+dynamic = ["version"]
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{name = "Nordic Semiconductor ASA", email = ""}]
+maintainers = [{name = "Chad Norvell", email = "chad@norvell.dev"}]
+dependencies = ["Sphinx>=6.0"]
+classifiers = [
+  "Framework :: Sphinx",
+  "Framework :: Sphinx :: Extension",
+  "License :: OSI Approved :: Apache Software License",
+  "Environment :: Plugins",
+  "Environment :: Web Environment",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+  "Topic :: Documentation",
+  "Topic :: Documentation :: Sphinx",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Software Development :: Documentation",
+  "Topic :: Software Development :: Embedded Systems",
+  "Topic :: System :: Operating System",
+]
+
+[project.urls]
+GitHub = "http://github.com/chadnorvell/sphinx-kconfig"
