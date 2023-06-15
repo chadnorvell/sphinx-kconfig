@@ -1,12 +1,12 @@
 [project]
 name = "sphinx-kconfig"
 description = "Zephyr's kconfig Sphinx extension as an independent package"
-version = "0.1.0"
+version = "0.1.1"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{name = "Nordic Semiconductor ASA", email = "contact@nordicsemi.com"}]
 maintainers = [{name = "Chad Norvell", email = "chad@norvell.dev"}]
-dependencies = ["Sphinx>=6.0"]
+dependencies = ["Sphinx>=5.0"]
 classifiers = [
   "Framework :: Sphinx",
   "Framework :: Sphinx :: Extension",
