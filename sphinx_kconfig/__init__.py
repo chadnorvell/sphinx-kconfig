@@ -23,9 +23,7 @@ Options
   This is only required if you want to use the ``.. kconfig:search::``
   directive, not if you just need support for Kconfig domain (e.g. when using
   Intersphinx in another project). Defaults to False.
-- kconfig_ext_paths: A list of base paths where to search for external modules
-  Kconfig files when they use ``kconfig-ext: True``. The extension will look for
-  ${BASE_PATH}/modules/${MODULE_NAME}/Kconfig.
+- kconfig_root_path: A string pointing to the project's root Kconfig file.
 """
 
 from distutils.command.build import build
@@ -56,70 +54,18 @@ __version__ = "0.1.0"
 
 
 RESOURCES_DIR = Path(__file__).parent / "static"
-ZEPHYR_BASE = Path(__file__).parents[4]
 
-SCRIPTS = ZEPHYR_BASE / "scripts"
-sys.path.insert(0, str(SCRIPTS))
-
-KCONFIGLIB = SCRIPTS / "kconfig"
-sys.path.insert(0, str(KCONFIGLIB))
-
-import zephyr_module
 import kconfiglib
 
 
-def kconfig_load(app: Sphinx) -> Tuple[kconfiglib.Kconfig, Dict[str, str]]:
-    """Load Kconfig"""
-    with TemporaryDirectory() as td:
-        modules = zephyr_module.parse_modules(ZEPHYR_BASE)
-
-        # generate Kconfig.modules file
-        kconfig = ""
-        for module in modules:
-            kconfig += zephyr_module.process_kconfig(module.project, module.meta)
-
-        with open(Path(td) / "Kconfig.modules", "w") as f:
-            f.write(kconfig)
-
-        # generate dummy Kconfig.dts file
-        kconfig = ""
-
-        with open(Path(td) / "Kconfig.dts", "w") as f:
-            f.write(kconfig)
-
-        # base environment
-        os.environ["ZEPHYR_BASE"] = str(ZEPHYR_BASE)
-        os.environ["srctree"] = str(ZEPHYR_BASE)
-        os.environ["KCONFIG_DOC_MODE"] = "1"
-        os.environ["KCONFIG_BINARY_DIR"] = td
-
-        # include all archs and boards
-        os.environ["ARCH_DIR"] = "arch"
-        os.environ["ARCH"] = "*"
-        os.environ["BOARD_DIR"] = "boards/*/*"
-
-        # insert external Kconfigs to the environment
-        module_paths = dict()
-        for module in modules:
-            name = module.meta["name"]
-            name_var = module.meta["name-sanitized"].upper()
-            module_paths[name] = module.project
-
-            build_conf = module.meta.get("build")
-            if not build_conf:
-                continue
-
-            if build_conf.get("kconfig"):
-                kconfig = Path(module.project) / build_conf["kconfig"]
-                os.environ[f"ZEPHYR_{name_var}_KCONFIG"] = str(kconfig)
-            elif build_conf.get("kconfig-ext"):
-                for path in app.config.kconfig_ext_paths:
-                    kconfig = Path(path) / "modules" / name / "Kconfig"
-                    if kconfig.exists():
-                        os.environ[f"ZEPHYR_{name_var}_KCONFIG"] = str(kconfig)
-
-        return kconfiglib.Kconfig(ZEPHYR_BASE / "Kconfig"), module_paths
-
+def kconfig_load(app: Sphinx) -> kconfiglib.Kconfig:
+    """Load Kconfigs"""
+    wd = os.path.split(app.config.kconfig_root_path)[0]
+    prev = os.getcwd()
+    os.chdir(wd)
+    kc = kconfiglib.Kconfig(app.config.kconfig_root_path)
+    os.chdir(prev)
+    return kc
 
 class KconfigSearchNode(nodes.Element):
     @staticmethod
@@ -248,7 +194,7 @@ def kconfig_build_resources(app: Sphinx) -> None:
         return
 
     with progress_message("Building Kconfig database..."):
-        kconfig, module_paths = kconfig_load(app)
+        kconfig = kconfig_load(app)
         db = list()
 
         for sc in sorted(
@@ -353,11 +299,6 @@ def kconfig_build_resources(app: Sphinx) -> None:
                 menupath = "(Top)" + menupath
 
                 filename = node.filename
-                for name, path in module_paths.items():
-                    path += "/"
-                    if node.filename.startswith(path):
-                        filename = node.filename.replace(path, f"<module:{name}>/")
-                        break
 
                 db.append(
                     {
@@ -418,7 +359,7 @@ def kconfig_install(
 
 def setup(app: Sphinx):
     app.add_config_value("kconfig_generate_db", False, "env")
-    app.add_config_value("kconfig_ext_paths", [], "env")
+    app.add_config_value("kconfig_root_path", "../Kconfig", "env")
 
     app.add_node(
         KconfigSearchNode,
