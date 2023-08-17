@@ -354,7 +354,7 @@ def kconfig_install(
     doctree.walk(visitor)
     if visitor.found_kconfig_search_directive:
         app.add_css_file("kconfig.css")
-        app.add_js_file("kconfig.mjs", type="module")
+        app.add_js_file("kconfig.js", type="module")
 
 
 def setup(app: Sphinx):

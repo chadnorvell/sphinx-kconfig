@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const DB_FILE = 'kconfig.json';
+/* kconfig.json lives in the html root, this script under _static/scripts.
+ * need to gup up a couple levels to not 404 it. */
+const DB_FILE = '../../kconfig.json';
 const RESULTS_PER_PAGE_OPTIONS = [10, 25, 50];
 
 /* search state */
@@ -355,9 +357,18 @@ function doSearchFromURL() {
     doSearch();
 }
 
+function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+}
+
 function setupKconfigSearch() {
     /* populate kconfig-search container */
     const container = document.getElementById('__kconfig-search');
+    var tries = 0;
+    while ((!container) && (tries < 50)) {
+        sleep(20);
+        container = document.getElementById('__kconfig-search');
+    }
     if (!container) {
         console.error("Couldn't find Kconfig search container");
         return;
