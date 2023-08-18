@@ -5,7 +5,7 @@
 
 /* kconfig.json lives in the html root, this script under _static/scripts.
  * need to gup up a couple levels to not 404 it. */
-const DB_FILE = '../../kconfig.json';
+var DB_FILE = 'kconfig.json';
 const RESULTS_PER_PAGE_OPTIONS = [10, 25, 50];
 
 /* search state */
@@ -22,6 +22,17 @@ let navigation;
 let navigationPagesText;
 let navigationPrev;
 let navigationNext;
+
+/**
+ * Test if a file exists or not.
+ * @param {String} path File to test for.
+ */
+function fileExists(path) {
+    var http = new XMLHttpRequest();
+    http.open('HEAD', path, false);
+    http.send();
+    return http.status != 404;
+}
 
 /**
  * Show an error message.
@@ -490,6 +501,16 @@ function setupKconfigSearch() {
 
     /* load database */
     showProgress('Loading database...');
+
+    // find it first
+    var exists = fileExists(DB_FILE);
+    var limit = 4;
+    var total = 0;
+    while (!exists && total <= limit) {
+        DB_FILE = "../".concat(DB_FILE);
+        exists = fileExists(DB_FILE);
+        total += 1;
+    }
 
     fetch(DB_FILE)
         .then(response => response.json())
