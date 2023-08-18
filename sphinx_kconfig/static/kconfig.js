@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const DB_FILE = 'kconfig.json';
+/* kconfig.json lives in the html root, this script under _static/scripts.
+ * need to gup up a couple levels to not 404 it. */
+var DB_FILE = 'kconfig.json';
 const RESULTS_PER_PAGE_OPTIONS = [10, 25, 50];
 
 /* search state */
@@ -20,6 +22,17 @@ let navigation;
 let navigationPagesText;
 let navigationPrev;
 let navigationNext;
+
+/**
+ * Test if a file exists or not.
+ * @param {String} path File to test for.
+ */
+function fileExists(path) {
+    var http = new XMLHttpRequest();
+    http.open('HEAD', path, false);
+    http.send();
+    return http.status != 404;
+}
 
 /**
  * Show an error message.
@@ -355,9 +368,18 @@ function doSearchFromURL() {
     doSearch();
 }
 
+function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+}
+
 function setupKconfigSearch() {
     /* populate kconfig-search container */
     const container = document.getElementById('__kconfig-search');
+    var tries = 0;
+    while ((!container) && (tries < 50)) {
+        sleep(20);
+        container = document.getElementById('__kconfig-search');
+    }
     if (!container) {
         console.error("Couldn't find Kconfig search container");
         return;
@@ -479,6 +501,16 @@ function setupKconfigSearch() {
 
     /* load database */
     showProgress('Loading database...');
+
+    // find it first
+    var exists = fileExists(DB_FILE);
+    var limit = 4;
+    var total = 0;
+    while (!exists && total <= limit) {
+        DB_FILE = "../".concat(DB_FILE);
+        exists = fileExists(DB_FILE);
+        total += 1;
+    }
 
     fetch(DB_FILE)
         .then(response => response.json())
